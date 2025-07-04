@@ -9,26 +9,26 @@ import { sendSuccess, sendError } from "../utils/responseHelpers.js";
 export const handlePRReview = async (req, res) => {
     try {
         const { prUrl, useGitHubToken } = req.body;
-        const { id: userId, githubToken } = req.user;
+        const userId = req.user.id;
 
         if (!prUrl) {
             return sendError(res, "PR URL is required", 400);
         }
 
-        const isPrivateRequest = useGitHubToken === true;
-
-        // ❌ Reject private repo access if user has no GitHub token
-        if (isPrivateRequest && !githubToken) {
-            return sendError(res, "You must log in via GitHub to access private repositories.", 403);
-        }
-
-        const diff = await fetchPullRequestDiff(prUrl, userId, isPrivateRequest); // ✅
+        const diff = await fetchPullRequestDiff(prUrl, userId, useGitHubToken);
         const aiReview = await generateReviewFromAI(diff);
 
         return sendSuccess(res, aiReview, "AI Review generated successfully");
     } catch (err) {
         console.error("❌ Review error:", err.message);
+
+        // Custom GitHub login error handling
+        if (err.code === "GITHUB_AUTH_REQUIRED") {
+            return sendError(res, err.message, 403);
+        }
+
         return sendError(res, err.message || "Failed to generate review", 500);
     }
 };
+
 

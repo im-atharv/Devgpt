@@ -1,6 +1,7 @@
-// App.jsx
 import React from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { ToastContainer } from "react-toastify"; // ✅ Import ToastContainer
+import "react-toastify/dist/ReactToastify.css"; // ✅ Import default styles
 import useAuth from "./hooks/useAuth";
 
 // Pages
@@ -24,6 +25,9 @@ export default function App() {
     <Router>
       <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
         <Navbar />
+
+        {/* ✅ Toast container goes here (outside <Routes>) */}
+        <ToastContainer position="top-center" autoClose={3000} />
 
         <main className="flex-1 px-4 sm:px-6 lg:px-8 py-6">
           <Routes>

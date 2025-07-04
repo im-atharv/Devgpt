@@ -6,45 +6,76 @@ import { submitPRReview } from "../services/reviewService";
 import { saveReview } from "../services/historyService";
 import { motion } from "framer-motion";
 import useAuth from "../hooks/useAuth";
+import { useEffect } from "react";
+import { toast } from "react-toastify";
 
 export default function PRInputForm({ onReviewSuccess }) {
     const { isGitHubLogin } = useAuth();
-    const [useGitHubToken, setUseGitHubToken] = useState(isGitHubLogin);
+    const [useGitHubToken, setUseGitHubToken] = useState(false);
     const initialValues = { prUrl: "" };
+    useEffect(() => {
+        setUseGitHubToken(isGitHubLogin);
+    }, [isGitHubLogin]);
 
     const handleSubmit = async (values, actions) => {
         try {
+            // 🔒 Prevent users from reviewing private PRs if not logged in with GitHub
+            if (useGitHubToken && !isGitHubLogin) {
+                toast.error("⚠️ Please log in with GitHub to review private PRs.");
+                actions.setSubmitting(false);
+                return;
+            }
+
+            // ✅ Call backend to generate AI review
             const apiResponse = await submitPRReview(values.prUrl, useGitHubToken);
             console.log("✅ AI response:", apiResponse);
 
             const review = apiResponse?.message;
 
-            // Check if required fields are present
+            // 🚫 Ensure all required fields are present
             if (!review || !review.summary || !review.riskLevel) {
-                console.error("❌ Missing review fields", review);
                 throw new Error("AI review did not return valid content");
             }
 
-            // Defensive fallback (optional, if AI sometimes returns invalid risk levels)
+            // ✅ Defensive fallback for invalid riskLevel values
             const riskLevels = ["low", "medium", "high"];
             const isValidRisk = riskLevels.includes(review.riskLevel);
 
+            // 💾 Save to history
             await saveReview({
                 prUrl: values.prUrl,
                 summary: review.summary,
-                riskLevel: isValidRisk ? review.riskLevel : "low", // fallback if needed
+                riskLevel: isValidRisk ? review.riskLevel : "low",
             });
 
+            // 🔔 Callback to parent (e.g., Dashboard)
             onReviewSuccess({ prUrl: values.prUrl, ...review });
+
+            // 🧹 Reset form
             actions.resetForm();
         } catch (error) {
+            const response = error?.response;
+            const backendMsg = response?.data?.message || error.message;
+
+            // 🧠 Custom message if backend says GitHub auth is required
+            if (
+                (response?.status === 401 || response?.status === 403) &&
+                backendMsg.toLowerCase().includes("github")
+            ) {
+                actions.setFieldError("prUrl", "🔒 You must log in with GitHub to review private PRs.");
+            } else {
+                // 🧠 General error fallback
+                actions.setFieldError("prUrl", backendMsg || "Review failed.");
+            }
+
             console.error("Review failed:", error);
-            const message = error?.response?.data?.message || error.message || "Review failed.";
-            actions.setFieldError("prUrl", message);
         } finally {
+            // 🕓 Always reset submitting state
             actions.setSubmitting(false);
         }
     };
+
+
 
     return (
         <motion.div
