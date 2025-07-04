@@ -1,17 +1,15 @@
 // services/reviewService.js
 import axiosInstance from "./axiosInstance";
 
-/**
- * Submits a GitHub PR URL for AI review
- * @param {string} prUrl - The full URL of the pull request to be reviewed.
- * @returns {Promise<Object>} - AI-generated review including suggestions/comments.
- */
-export const submitPRReview = async (prUrl) => {
+export const submitPRReview = async (prUrl, useGitHubToken = true) => {
     const token = localStorage.getItem("devgpt-token");
 
     const response = await axiosInstance.post(
         "/review",
-        { prUrl },
+        {
+            prUrl,
+            useGitHubToken, // this must be true for private repos
+        },
         {
             headers: {
                 Authorization: `Bearer ${token}`,
@@ -19,5 +17,5 @@ export const submitPRReview = async (prUrl) => {
         }
     );
 
-    return response.data; // contains .message
+    return response.data;
 };

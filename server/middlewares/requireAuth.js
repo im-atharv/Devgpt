@@ -1,7 +1,12 @@
 import jwt from "jsonwebtoken";
 import { sendError } from "../utils/responseHelpers.js";
+import { User } from "../models/User.js";
 
-export const requireAuth = (req, res, next) => {
+/**
+ * Middleware to validate JWT and attach user info to request
+ * - Attaches: req.user = { id, email, githubToken }
+ */
+export const requireAuth = async (req, res, next) => {
     const authHeader = req.headers.authorization;
 
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
@@ -12,7 +17,20 @@ export const requireAuth = (req, res, next) => {
 
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        req.userId = decoded.userId;
+        const user = await User.findById(decoded.userId);
+
+        if (!user) {
+            return sendError(res, "Unauthorized: User not found", 401);
+        }
+
+        req.user = {
+            id: user._id,
+            email: user.email,
+            githubToken: user.githubToken || null,
+            isGitHubLogin: !!user.githubToken, // ✅ <--- this line
+        };
+
+
         next();
     } catch (err) {
         console.error("❌ JWT verification failed:", err.message);

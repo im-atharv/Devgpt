@@ -1,3 +1,4 @@
+// context/AuthContext.js
 import React, { createContext, useState, useEffect } from "react";
 import { loginUser, registerUser } from "../services/authService";
 
@@ -10,6 +11,9 @@ export function AuthProvider({ children }) {
   });
 
   const [loading, setLoading] = useState(false);
+  const [isGitHubLogin, setIsGitHubLogin] = useState(
+    localStorage.getItem("isGitHubLogin") === "true"
+  );
   const isLoggedIn = !!user;
 
   const login = async (formData) => {
@@ -22,6 +26,7 @@ export function AuthProvider({ children }) {
       setUser(user);
       localStorage.setItem("devgpt-user", JSON.stringify(user));
       localStorage.setItem("devgpt-token", token);
+      localStorage.setItem("isGitHubLogin", "false");
 
       return { success: true };
     } catch (err) {
@@ -45,23 +50,33 @@ export function AuthProvider({ children }) {
       setUser(user);
       localStorage.setItem("devgpt-user", JSON.stringify(user));
       localStorage.setItem("devgpt-token", token);
+      localStorage.setItem("isGitHubLogin", "false");
 
       return { success: true };
     } catch (err) {
       console.error("Register error:", err);
       return {
         success: false,
-        message: err?.response?.data?.message || err.message || "Registration failed",
+        message:
+          err?.response?.data?.message || err.message || "Registration failed",
       };
     } finally {
       setLoading(false);
     }
   };
 
+  const loginWithGitHub = (token, userFromGitHub) => {
+    setUser(userFromGitHub);
+    localStorage.setItem("devgpt-user", JSON.stringify(userFromGitHub));
+    localStorage.setItem("devgpt-token", token);
+    localStorage.setItem("isGitHubLogin", "true");
+  };
+
   const logout = () => {
     setUser(null);
     localStorage.removeItem("devgpt-user");
     localStorage.removeItem("devgpt-token");
+    localStorage.removeItem("isGitHubLogin");
   };
 
   useEffect(() => {
@@ -74,7 +89,18 @@ export function AuthProvider({ children }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, isLoggedIn, login, register, logout, loading }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        isLoggedIn,
+        loading,
+        isGitHubLogin,
+        login,
+        register,
+        logout,
+        loginWithGitHub,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

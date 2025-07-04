@@ -1,35 +1,41 @@
-import React from "react";
+import React, { useState } from "react";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import { toFormikValidationSchema } from "zod-formik-adapter";
 import { prSchema } from "../validation/prSchema";
 import { submitPRReview } from "../services/reviewService";
 import { saveReview } from "../services/historyService";
 import { motion } from "framer-motion";
+import useAuth from "../hooks/useAuth";
 
 export default function PRInputForm({ onReviewSuccess }) {
+    const { isGitHubLogin } = useAuth();
+    const [useGitHubToken, setUseGitHubToken] = useState(isGitHubLogin);
     const initialValues = { prUrl: "" };
 
     const handleSubmit = async (values, actions) => {
         try {
-            const apiResponse = await submitPRReview(values.prUrl);
+            const apiResponse = await submitPRReview(values.prUrl, useGitHubToken);
             console.log("✅ AI response:", apiResponse);
 
             const review = apiResponse?.message;
 
+            // Check if required fields are present
             if (!review || !review.summary || !review.riskLevel) {
+                console.error("❌ Missing review fields", review);
                 throw new Error("AI review did not return valid content");
             }
 
-            // Save to DB
+            // Defensive fallback (optional, if AI sometimes returns invalid risk levels)
+            const riskLevels = ["low", "medium", "high"];
+            const isValidRisk = riskLevels.includes(review.riskLevel);
+
             await saveReview({
                 prUrl: values.prUrl,
                 summary: review.summary,
-                riskLevel: review.riskLevel,
+                riskLevel: isValidRisk ? review.riskLevel : "low", // fallback if needed
             });
 
-            // Add to context or parent
             onReviewSuccess({ prUrl: values.prUrl, ...review });
-
             actions.resetForm();
         } catch (error) {
             console.error("Review failed:", error);
@@ -71,6 +77,17 @@ export default function PRInputForm({ onReviewSuccess }) {
                                 className="text-sm text-red-500 mt-1"
                             />
                         </div>
+
+                        {isGitHubLogin && (
+                            <label className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                                <input
+                                    type="checkbox"
+                                    checked={useGitHubToken}
+                                    onChange={() => setUseGitHubToken(!useGitHubToken)}
+                                />
+                                Use GitHub access for private PRs
+                            </label>
+                        )}
 
                         <button
                             type="submit"

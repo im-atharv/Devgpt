@@ -9,6 +9,7 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import History from "./pages/History";
+import GitHubAuthSuccess from "./pages/GitHubAuthSuccess";
 
 // Components
 import Navbar from "./components/Navbar";
@@ -30,6 +31,7 @@ export default function App() {
             <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/github-success" element={<GitHubAuthSuccess />} />
 
             {/* Protected Routes */}
             <Route

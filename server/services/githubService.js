@@ -1,52 +1,46 @@
 // services/githubService.js
-import { Octokit } from "@octokit/rest";
-import { parse } from "url";
+import axios from "axios";
+import { User } from "../models/User.js";
 
-const octokit = new Octokit({
-    auth: process.env.GITHUB_TOKEN || undefined,
-});
-
-function parseGitHubPRUrl(prUrl) {
-    try {
-        const parsed = parse(prUrl).pathname.split("/");
-        const owner = parsed[1];
-        const repo = parsed[2];
-        const pull_number = parseInt(parsed[4], 10);
-
-        if (!owner || !repo || isNaN(pull_number)) {
-            throw new Error("Invalid PR URL structure.");
-        }
-
-        return { owner, repo, pull_number };
-    } catch (err) {
-        throw new Error("Failed to parse GitHub PR URL.");
+export const fetchPullRequestDiff = async (prUrl, userId, useGitHubToken = false) => {
+    const match = prUrl.match(
+        /^https:\/\/github\.com\/([^/]+)\/([^/]+)\/pull\/(\d+)/
+    );
+    if (!match) {
+        throw new Error("Invalid PR URL");
     }
-}
 
-export async function fetchPullRequestDiff(prUrl) {
-    const { owner, repo, pull_number } = parseGitHubPRUrl(prUrl);
+    const [_, owner, repo, pullNumber] = match;
+
+    let headers = {
+        Accept: "application/vnd.github.v3+json",
+    };
+
+    if (useGitHubToken && userId) {
+        const user = await User.findById(userId);
+        if (!user || !user.githubToken) {
+            throw new Error("GitHub token not found for user");
+        }
+        headers.Authorization = `Bearer ${user.githubToken}`;
+    }
 
     try {
-        const { data: files } = await octokit.pulls.listFiles({
-            owner,
-            repo,
-            pull_number,
-        });
+        const filesResponse = await axios.get(
+            `https://api.github.com/repos/${owner}/${repo}/pulls/${pullNumber}/files`,
+            { headers }
+        );
 
-        let diffOutput = "";
+        const files = filesResponse.data;
 
-        for (const file of files) {
-            diffOutput += `\n\n📄 File: ${file.filename}\n`;
-            if (file.patch) {
-                diffOutput += file.patch;
-            } else {
-                diffOutput += "⚠️ File too large or binary. No diff available.\n";
-            }
-        }
+        if (!files.length) throw new Error("PR has no changed files");
 
-        return diffOutput.trim();
+        const diff = files
+            .map((file) => `### File: ${file.filename}\n\`\`\`diff\n${file.patch || ""}\n\`\`\``)
+            .join("\n\n");
+
+        return diff;
     } catch (err) {
-        console.error("❌ GitHub API error:", err.message);
+        console.error("❌ GitHub API error:", err.response?.data || err.message);
         throw new Error("Failed to fetch PR diff from GitHub.");
     }
-}
+};

@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const API = axios.create({
-    baseURL: "http://localhost:5000", // ✅ backend port
+    baseURL: "http://localhost:5000", // Adjust if using env vars
 });
 
 // Save review
@@ -10,11 +10,7 @@ export const saveReview = async ({ prUrl, summary, riskLevel }) => {
 
     const response = await API.post(
         "/api/history",
-        {
-            prUrl,
-            summary,      // ✅ not inside reviewContent
-            riskLevel,    // ✅ not inside reviewContent
-        },
+        { prUrl, summary, riskLevel },
         {
             headers: {
                 Authorization: `Bearer ${token}`,

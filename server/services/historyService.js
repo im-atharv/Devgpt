@@ -1,6 +1,6 @@
-import Review from "../models/Review.js";
+import { Review } from "../models/Review.js";
 
-// Save
+// Save a review
 export async function saveReview({ userId, prUrl, summary, riskLevel }) {
     return await Review.create({
         userId,
@@ -10,7 +10,7 @@ export async function saveReview({ userId, prUrl, summary, riskLevel }) {
     });
 }
 
-// Get
+// Get all reviews by user
 export async function getReviewsByUser(userId) {
     return await Review.find({ userId }).sort({ createdAt: -1 });
 }

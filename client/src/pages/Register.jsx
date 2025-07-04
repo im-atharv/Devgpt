@@ -6,6 +6,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { UserPlus } from "lucide-react";
 import { registerSchema } from "../validation/registerSchema";
 import { registerUser } from "../services/authService";
+import GitHubLoginButton from "../components/GitHubLoginButton";
 
 export default function Register() {
     const navigate = useNavigate();
@@ -101,6 +102,11 @@ export default function Register() {
                         </Form>
                     )}
                 </Formik>
+                <div className="flex items-center justify-center">
+                    <span className="text-sm text-gray-500 dark:text-gray-400">or</span>
+                </div>
+                <GitHubLoginButton label="Register with GitHub" />
+
 
                 <div className="text-sm text-center text-gray-600 dark:text-gray-400">
                     Already have an account?{" "}

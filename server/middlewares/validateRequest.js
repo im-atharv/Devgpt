@@ -1,8 +1,12 @@
 export const validateRequest = (schema) => (req, res, next) => {
-    try {
-        req.body = schema.parse(req.body);
-        next();
-    } catch (err) {
-        return res.status(400).json({ success: false, message: err.errors[0].message });
-    }
+  const result = schema.safeParse(req.body); // ✅ FIXED
+  if (!result.success) {
+    const error = result.error.flatten();
+    return res.status(400).json({
+      success: false,
+      message: "Validation failed",
+      errors: error.fieldErrors,
+    });
+  }
+  next();
 };

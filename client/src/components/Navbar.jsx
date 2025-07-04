@@ -1,6 +1,7 @@
 import React from "react";
 import { Link, useNavigate } from "react-router-dom";
 import useAuth from "../hooks/useAuth";
+import { initiateGitHubLogin } from "../services/authService";
 
 export default function Navbar() {
     const { isLoggedIn, logout } = useAuth();
@@ -27,9 +28,9 @@ export default function Navbar() {
                     AI-PR-Reviewer
                 </span>
 
-                {/* Right: History + Logout */}
+                {/* Right: Actions */}
                 <div className="flex items-center gap-3 z-10">
-                    {isLoggedIn && (
+                    {isLoggedIn ? (
                         <>
                             <Link
                                 to="/history"
@@ -39,19 +40,33 @@ export default function Navbar() {
                             >
                                 History
                             </Link>
-
-                            <div className="flex items-center gap-3 z-10">
-                                {isLoggedIn && (
-                                    <button
-                                        onClick={handleLogout}
-                                        className="text-sm px-3 py-1 rounded-md font-medium transition-colors duration-200
-                                       bg-gray-100 text-gray-800 hover:bg-gray-200
-                                       dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700"
-                                    >
-                                        Logout
-                                    </button>
-                                )}
-                            </div>
+                            <button
+                                onClick={handleLogout}
+                                className="text-sm px-3 py-1 rounded-md font-medium transition-colors duration-200
+                                           bg-gray-100 text-gray-800 hover:bg-gray-200
+                                           dark:bg-gray-800 dark:text-gray-100 dark:hover:bg-gray-700"
+                            >
+                                Logout
+                            </button>
+                        </>
+                    ) : (
+                        <>
+                            <Link
+                                to="/login"
+                                className="text-sm px-3 py-1 rounded-md font-medium transition-colors duration-200
+                                           bg-blue-100 text-blue-800 hover:bg-blue-200
+                                           dark:bg-blue-900 dark:text-blue-100 dark:hover:bg-blue-800"
+                            >
+                                Login
+                            </Link>
+                            <button
+                                onClick={initiateGitHubLogin}
+                                className="text-sm px-3 py-1 rounded-md font-medium transition-colors duration-200
+                                           bg-black text-white hover:bg-gray-800
+                                           dark:bg-gray-700 dark:hover:bg-gray-600"
+                            >
+                                GitHub Login
+                            </button>
                         </>
                     )}
                 </div>
@@ -59,4 +74,3 @@ export default function Navbar() {
         </header>
     );
 }
-

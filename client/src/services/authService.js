@@ -1,5 +1,7 @@
 // services/authService.js
 import axiosInstance from "./axiosInstance";
+
+// 🔐 Register via form
 export const registerUser = async (formData) => {
     try {
         const res = await axiosInstance.post("/auth/register", formData);
@@ -10,6 +12,7 @@ export const registerUser = async (formData) => {
     }
 };
 
+// 🔐 Login via form
 export const loginUser = async (formData) => {
     try {
         const res = await axiosInstance.post("/auth/login", formData);
@@ -18,4 +21,10 @@ export const loginUser = async (formData) => {
         console.error("❌ Login error:", error?.response?.data || error.message);
         throw error?.response?.data || { message: "Login failed. Check your credentials." };
     }
+};
+
+// 🔐 Login via GitHub OAuth (redirect flow)
+export const initiateGitHubLogin = () => {
+    // Will trigger backend GitHub OAuth flow
+    window.location.href = "http://localhost:5000/api/auth/github";
 };

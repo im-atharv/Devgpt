@@ -1,3 +1,4 @@
+// services/authService.js
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { User } from "../models/User.js";
@@ -6,9 +7,6 @@ dotenv.config();
 
 const JWT_SECRET = process.env.JWT_SECRET || "devgpt-secret";
 
-/**
- * Registers a new user
- */
 export async function registerUser({ name, email, password }) {
     const existingUser = await User.findOne({ email });
     if (existingUser) throw new Error("User already exists");
@@ -18,12 +16,9 @@ export async function registerUser({ name, email, password }) {
 
     const token = jwt.sign({ userId: user._id }, JWT_SECRET, { expiresIn: "7d" });
 
-    return { user: { name: user.name, email: user.email }, token };
+    return { user: { _id: user._id, name: user.name, email: user.email }, token };
 }
 
-/**
- * Logs in an existing user
- */
 export async function loginUser({ email, password }) {
     const user = await User.findOne({ email });
     if (!user) throw new Error("Invalid credentials");
@@ -33,5 +28,5 @@ export async function loginUser({ email, password }) {
 
     const token = jwt.sign({ userId: user._id }, JWT_SECRET, { expiresIn: "7d" });
 
-    return { user: { name: user.name, email: user.email }, token };
+    return { user: { _id: user._id, name: user.name, email: user.email }, token };
 }
