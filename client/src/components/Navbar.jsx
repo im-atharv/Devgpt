@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Menu, X, Clock, LogOut, LogIn } from "lucide-react";
 import { motion, AnimatePresence, LayoutGroup } from "framer-motion";
@@ -6,8 +6,10 @@ import useAuth from "../hooks/useAuth";
 import { initiateGitHubLogin } from "../services/authService";
 
 export default function Navbar() {
-    const { isLoggedIn, logout } = useAuth();
+    const { isLoggedIn, logout, user } = useAuth();
     const [menuOpen, setMenuOpen] = useState(false);
+    const [greeting, setGreeting] = useState("");
+
     const navigate = useNavigate();
 
     const handleLogout = () => {
@@ -15,16 +17,35 @@ export default function Navbar() {
         navigate("/login");
     };
 
+    useEffect(() => {
+        const hours = new Date().getHours();
+        let greet = "Hello";
+
+        if (hours > 4 && hours < 12) greet = "Good Morning";
+        else if (hours >= 12 && hours < 17) greet = "Good Afternoon";
+        else greet = "Good Evening";
+
+        const name = user?.name?.split(" ")[0] || "there";
+        setGreeting(`${greet}, ${name}`);
+    }, [user]);
+
     return (
         <header className="sticky top-0 z-50 bg-white/70 dark:bg-gray-900/70 backdrop-blur-md border-b border-gray-200 dark:border-gray-800 shadow-sm">
             <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
-                {/* Logo */}
-                <Link
-                    to="/"
-                    className="text-2xl font-bold text-blue-600 dark:text-blue-400 z-10"
-                >
-                    DevGPT
-                </Link>
+                {/* Logo and Greeting */}
+                <div className="flex flex-col gap-1 z-10">
+                    <Link
+                        to="/"
+                        className="text-2xl font-bold text-blue-600 dark:text-blue-400"
+                    >
+                        DevGPT
+                    </Link>
+                    {isLoggedIn && (
+                        <span className="text-xs text-gray-600 dark:text-gray-400 font-medium">
+                            {greeting}
+                        </span>
+                    )}
+                </div>
 
                 {/* Center Title */}
                 <span className="hidden md:block absolute left-1/2 transform -translate-x-1/2 font-semibold text-base text-gray-700 dark:text-gray-300 tracking-wide">
@@ -44,7 +65,7 @@ export default function Navbar() {
                             <motion.button
                                 onClick={handleLogout}
                                 whileTap={{ scale: 0.96 }}
-                                className="text-sm px-4 py-2 rounded-md bg-gradient-to-r from-red-500 to-pink-500 text-white hover:opacity-90 transition font-medium"
+                                className="cursor-pointer text-sm px-4 py-2 rounded-md bg-gradient-to-r from-red-500 to-pink-500 text-white hover:opacity-90 transition font-medium"
                             >
                                 Logout
                             </motion.button>
@@ -93,6 +114,11 @@ export default function Navbar() {
                             transition={{ duration: 0.4, ease: "easeInOut" }}
                             className="md:hidden overflow-hidden bg-white dark:bg-gray-900 border-t dark:border-gray-800 px-4 pt-4 pb-6 space-y-3"
                         >
+                            {isLoggedIn && (
+                                <div className="text-xs font-medium text-gray-600 dark:text-gray-400 mb-2 px-1">
+                                    {greeting}
+                                </div>
+                            )}
                             {isLoggedIn ? (
                                 <>
                                     <Link
@@ -108,7 +134,7 @@ export default function Navbar() {
                                             handleLogout();
                                             setMenuOpen(false);
                                         }}
-                                        className="flex items-center gap-2 px-4 py-2 text-sm rounded-md bg-gradient-to-r from-red-500 to-pink-500 text-white hover:opacity-90 transition w-full text-left font-medium"
+                                        className="cursor-pointer flex items-center gap-2 px-4 py-2 text-sm rounded-md bg-gradient-to-r from-red-500 to-pink-500 text-white hover:opacity-90 transition w-full text-left font-medium"
                                     >
                                         <LogOut size={16} />
                                         Logout

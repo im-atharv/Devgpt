@@ -1,5 +1,5 @@
 import React from "react";
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -15,7 +15,7 @@ import GitHubAuthSuccess from "./pages/GitHubAuthSuccess";
 
 // Components
 import Navbar from "./components/Navbar";
-import RedirectIfAuthenticated from "./components/RedirectIfAuthenticated"; 
+import RedirectIfAuthenticated from "./components/RedirectIfAuthenticated";
 
 function ProtectedRoute({ children }) {
   const { isLoggedIn } = useAuth();
@@ -31,9 +31,14 @@ export default function App() {
 
         <main className="flex-1">
           <Routes>
-            {/* Public Routes */}
-            <Route path="/" element={<LandingPage />} />
-
+            <Route
+              path="/"
+              element={
+                <RedirectIfAuthenticated>
+                  <LandingPage />
+                </RedirectIfAuthenticated>
+              }
+            />
             <Route
               path="/login"
               element={
@@ -50,10 +55,7 @@ export default function App() {
                 </RedirectIfAuthenticated>
               }
             />
-
             <Route path="/github-success" element={<GitHubAuthSuccess />} />
-
-            {/* Protected Routes */}
             <Route
               path="/dashboard"
               element={
@@ -70,8 +72,6 @@ export default function App() {
                 </ProtectedRoute>
               }
             />
-
-            {/* Catch-All */}
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>
         </main>

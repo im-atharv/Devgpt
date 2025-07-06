@@ -1,4 +1,3 @@
-// components/ReviewModal.jsx
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
@@ -14,6 +13,8 @@ export default function ReviewModal({ isOpen, onClose, review }) {
         affectedFiles = [],
         fileComments = [],
     } = review;
+
+    const filteredFileComments = fileComments.filter(fc => fc.issues?.length > 0);
 
     return (
         <AnimatePresence>
@@ -37,9 +38,7 @@ export default function ReviewModal({ isOpen, onClose, review }) {
                         <X size={20} />
                     </button>
 
-                    <h2 className="text-xl font-bold text-blue-600 dark:text-blue-400 mb-3">
-                        Full AI Review
-                    </h2>
+                    <h2 className="text-xl font-bold text-blue-600 dark:text-blue-400 mb-3">Full AI Review</h2>
 
                     <a
                         href={prUrl}
@@ -51,14 +50,12 @@ export default function ReviewModal({ isOpen, onClose, review }) {
                     </a>
 
                     <div className="mb-4">
-                        <span
-                            className={`inline-block text-xs font-semibold uppercase px-2 py-1 rounded-full ${riskLevel === "high"
-                                    ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
-                                    : riskLevel === "medium"
-                                        ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
-                                        : "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-                                }`}
-                        >
+                        <span className={`inline-block text-xs font-semibold uppercase px-2 py-1 rounded-full ${riskLevel === "high"
+                            ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                            : riskLevel === "medium"
+                                ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
+                                : "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                            }`}>
                             Risk: {riskLevel}
                         </span>
                     </div>
@@ -92,12 +89,12 @@ export default function ReviewModal({ isOpen, onClose, review }) {
                         </section>
                     )}
 
-                    {fileComments.length > 0 && (
+                    {filteredFileComments.length > 0 && (
                         <section className="mb-6">
                             <h3 className="font-semibold mb-1">File Comments</h3>
-                            {fileComments.map((fc, i) => (
+                            {filteredFileComments.map((fc, i) => (
                                 <div key={i} className="mb-3">
-                                    <p className="text-sm font-medium text-gray-900 dark:text-white">{fc.filename}</p>
+                                    <p className="text-sm font-medium text-blue-600 dark:text-blue-300">{fc.filename}</p>
                                     <ul className="text-sm list-disc pl-5 text-gray-700 dark:text-gray-300 space-y-1 mt-1">
                                         {fc.issues.map((issue, j) => (
                                             <li key={j}>{issue}</li>
@@ -111,7 +108,7 @@ export default function ReviewModal({ isOpen, onClose, review }) {
                     <div className="text-right mt-8">
                         <button
                             onClick={onClose}
-                            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm transition"
+                            className="cursor-pointer bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md text-sm transition"
                         >
                             Close
                         </button>

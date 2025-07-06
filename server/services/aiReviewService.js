@@ -11,51 +11,64 @@ const MODEL = "gemini-1.5-flash-latest";
  * Production-grade system prompt to extract structured, high-quality PR reviews.
  */
 const SYSTEM_PROMPT = `
-You are an experienced Staff Software Engineer specializing in code reviews, architecture, and best practices.
+You are a Staff Software Engineer and expert code reviewer tasked with evaluating a GitHub Pull Request (PR). Your review should identify the impact, quality, and risks of the code changes with a focus on mentoring and constructive feedback.
 
-Your task is to review the provided GitHub Pull Request (PR) and return a strict JSON object with the following structure:
+Return a **strictly valid raw JSON** object in the following structure:
 
 {
-  "summary": "string",                     // Concise 1-2 sentence summary of what the PR implements or fixes
-  "riskLevel": "low" | "medium" | "high",  // Based on complexity, test coverage, side effects, or architectural impact
-  "suggestions": [                         // Actionable and specific suggestions to improve quality or performance
-    "Avoid deeply nested conditionals in file A.js",
-    "Add missing validation in user input in auth route",
+  "summary": "string",                     // A precise 1-2 sentence summary describing what this PR implements or fixes
+  "riskLevel": "low" | "medium" | "high",  // Based on complexity, architectural impact, potential bugs, missing tests, or side effects
+  "suggestions": [                         // Actionable improvements across code style, performance, clarity, or structure
+    "Refactor nested conditions in src/utils/validator.js",
+    "Add unit tests for error handling in auth controller",
     ...
   ],
-  "affectedFiles": [                       // List of actual filenames changed, based on the diff
-    "src/components/Button.jsx",
+  "affectedFiles": [                       // Array of actual filenames changed, based on the diff
+    "src/pages/Dashboard.jsx",
     ...
   ],
-  "fileComments": [                        // Optional per-file in-depth comments, only if issues found
+  "fileComments": [                        // MUST always be present — provide detailed per-file issues if applicable, else empty array []
     {
-      "filename": "routes/auth.js",
+      "filename": "controllers/auth.js",   // File name must match exactly from the PR diff
       "issues": [
-        "JWT token secret should be in environment variables.",
-        "Add error handling for invalid login attempts."
+        "Missing input sanitization on login route. Consider using express-validator.",
+        "Hardcoded JWT secret detected — this should be loaded from process.env for security.",
+        "No fallback route or error response defined for invalid credentials."
       ]
     },
     ...
   ]
 }
 
-### Instructions:
-- Only return raw JSON. No explanations, markdown, headers, or text outside the JSON.
-- Be critical but constructive: assume you're mentoring a mid-level developer.
-- Do NOT fabricate filenames — base all analysis only on actual diff contents.
-- Mention architectural risks, code smells, unhandled edge cases, and missing tests where applicable.
+### Review Instructions:
 
-Your goal is to help improve code quality while identifying risks. Focus on clarity, impact, and relevance.
+- **ALWAYS return all 5 keys**, even if empty arrays (e.g. suggestions: [], fileComments: []).
+- **NEVER return markdown** or wrap JSON in code blocks or triple backticks.
+- Do not explain your output or summarize — just return raw JSON.
+- All filenames and feedback must be strictly based on the PR diff input — do not invent files or structure.
+- For \`fileComments\`, include highly specific technical insights per file:
+  - Mention anti-patterns, security concerns, test coverage gaps, performance issues, etc.
+  - Avoid vague comments — be concise, technical, and constructive.
+  - Each file should contain only issues relevant to that specific file.
+
+### Style Guide:
+
+- Use concise, technical language appropriate for a mid-to-senior engineer.
+- Prioritize readability, architectural soundness, and maintainability.
+- Your role is to improve the codebase, reduce risk, and help the developer grow.
+
+STRICTLY return only the JSON structure above. Any deviation will break the automation process.
 `.trim();
+
 
 /**
  * Utility to clean Gemini's response if wrapped in ```json ``` block
  */
 function cleanJSONResponse(raw) {
-    return raw
-        .replace(/```json/g, "")
-        .replace(/```/g, "")
-        .trim();
+  return raw
+    .replace(/```json/g, "")
+    .replace(/```/g, "")
+    .trim();
 }
 
 /**
@@ -64,27 +77,27 @@ function cleanJSONResponse(raw) {
  * @returns {Promise<Object>} Parsed review response
  */
 export const generateReviewFromAI = async (context) => {
-    try {
-        const model = genAI.getGenerativeModel({
-            model: MODEL,
-            generationConfig: {
-                temperature: 0.4, // lower temp = more deterministic
-                topK: 40,
-                topP: 0.9,
-                maxOutputTokens: 2048,
-            },
-        });
+  try {
+    const model = genAI.getGenerativeModel({
+      model: MODEL,
+      generationConfig: {
+        temperature: 0.4, // lower temp = more deterministic
+        topK: 40,
+        topP: 0.9,
+        maxOutputTokens: 2048,
+      },
+    });
 
-        const { repo, prNumber, title, body, baseBranch, headBranch, files } = context;
+    const { repo, prNumber, title, body, baseBranch, headBranch, files } = context;
 
-        const fileDiffs = files
-            .map(
-                (file) =>
-                    `### File: ${file.filename}\n\`\`\`diff\n${file.patch}\n\`\`\``
-            )
-            .join("\n\n");
+    const fileDiffs = files
+      .map(
+        (file) =>
+          `### File: ${file.filename}\n\`\`\`diff\n${file.patch}\n\`\`\``
+      )
+      .join("\n\n");
 
-        const fullPrompt = `
+    const fullPrompt = `
 ${SYSTEM_PROMPT}
 
 Repository: ${repo}
@@ -98,13 +111,14 @@ Changed Files and Diffs:
 ${fileDiffs}
 `.trim();
 
-        const result = await model.generateContent(fullPrompt);
-        const response = await result.response;
-        const cleaned = cleanJSONResponse(response.text());
-
-        return JSON.parse(cleaned);
-    } catch (err) {
-        console.error("❌ Gemini AI Review Error:", err.message);
-        throw new Error("Failed to generate or parse AI review response.");
-    }
+    const result = await model.generateContent(fullPrompt);
+    const response = await result.response;
+    const cleaned = cleanJSONResponse(response.text());
+    const parsed = JSON.parse(cleaned);
+    parsed.fileComments = parsed.fileComments?.filter(fc => fc.issues?.length > 0) || [];
+    return parsed;
+  } catch (err) {
+    console.error("❌ Gemini AI Review Error:", err.message);
+    throw new Error("Failed to generate or parse AI review response.");
+  }
 };

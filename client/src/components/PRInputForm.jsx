@@ -138,7 +138,7 @@ export default function PRInputForm({ onReviewSuccess }) {
                                 type="submit"
                                 disabled={isSubmitting}
                                 whileTap={{ scale: 0.98 }}
-                                className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-3 rounded-lg shadow-lg transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed"
+                                className="cursor-pointer w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-3 rounded-lg shadow-lg transition-all duration-300 disabled:opacity-60 disabled:cursor-not-allowed"
                             >
                                 {isSubmitting ? "Reviewing..." : "Review PR 🔍"}
                             </motion.button>

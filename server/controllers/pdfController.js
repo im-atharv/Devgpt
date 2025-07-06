@@ -1,5 +1,6 @@
 // controllers/pdfController.js
 import puppeteer from "puppeteer";
+import { getPDFTemplate } from "../utils/pdfTemplate.js";
 
 export const exportPDF = async (req, res) => {
     const { html } = req.body;
@@ -11,14 +12,14 @@ export const exportPDF = async (req, res) => {
     try {
         const browser = await puppeteer.launch({ headless: "new" });
         const page = await browser.newPage();
+        const enhancedHTML = getPDFTemplate(html);
 
-        await page.setContent(html, {
-            waitUntil: "networkidle0",
-        });
+        await page.setContent(enhancedHTML, { waitUntil: "networkidle0" });
 
         const pdfBuffer = await page.pdf({
             format: "A4",
             printBackground: true,
+            margin: { top: "40px", bottom: "40px", left: "40px", right: "40px" },
         });
 
         await browser.close();

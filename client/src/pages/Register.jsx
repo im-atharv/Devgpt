@@ -6,11 +6,13 @@ import { Link, useNavigate } from "react-router-dom";
 import { UserPlus } from "lucide-react";
 import { registerSchema } from "../validation/registerSchema";
 import { registerUser } from "../services/authService";
+import useAuth from "../hooks/useAuth";
 import GitHubLoginButton from "../components/GitHubLoginButton";
-import PasswordField from "../components/PasswordField"; // ✅ import
+import PasswordField from "../components/PasswordField";
 
 export default function Register() {
     const navigate = useNavigate();
+    const { login } = useAuth();
 
     const initialValues = {
         name: "",
@@ -21,9 +23,15 @@ export default function Register() {
 
     const handleRegister = async (values, actions) => {
         try {
-            const res = await registerUser(values);
-            actions.setSubmitting(false);
-            navigate("/login");
+            await registerUser(values);
+            const result = await login({ email: values.email, password: values.password });
+            if (result.success) {
+                actions.setSubmitting(false);
+                navigate("/dashboard");
+            } else {
+                actions.setFieldError("email", result.message || "Login failed after registration.");
+                actions.setSubmitting(false);
+            }
         } catch (err) {
             actions.setFieldError("email", "Registration failed. Try again.");
             actions.setSubmitting(false);
@@ -32,11 +40,9 @@ export default function Register() {
 
     return (
         <div className="relative min-h-screen flex items-center justify-center px-4 bg-gradient-to-br from-violet-100 to-blue-50 dark:from-gray-950 dark:to-gray-900 overflow-hidden">
-            {/* Glowing Blobs */}
             <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[500px] h-[500px] bg-blue-400/20 blur-[120px] rounded-full z-0" />
             <div className="absolute bottom-0 right-1/4 w-[300px] h-[300px] bg-purple-400/20 blur-[100px] rounded-full z-0" />
 
-            {/* Card */}
             <motion.div
                 className="relative z-10 w-full max-w-4xl bg-white/70 dark:bg-gray-900/70 backdrop-blur-xl border border-gray-200 dark:border-gray-700 rounded-2xl shadow-xl p-6 md:p-8 flex flex-col md:flex-row gap-6"
                 initial={{ opacity: 0, y: 30 }}
@@ -77,8 +83,8 @@ export default function Register() {
                                     <ErrorMessage name="email" component="div" className="text-red-500 text-sm mt-1" />
                                 </div>
 
-                                <PasswordField name="password" placeholder="Password" /> {/* ✅ updated */}
-                                <PasswordField name="confirmPassword" placeholder="Confirm Password" /> {/* ✅ updated */}
+                                <PasswordField name="password" placeholder="Password" />
+                                <PasswordField name="confirmPassword" placeholder="Confirm Password" />
 
                                 <motion.button
                                     type="submit"

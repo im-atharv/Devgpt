@@ -25,6 +25,16 @@ export default function Dashboard() {
         setError("");
         setReviewResult(result);
         addReviewToHistory(result);
+        setTimeout(() => {
+            if (resultRef.current) {
+                const offsetTop = resultRef.current.getBoundingClientRect().top + window.scrollY;
+                const navbarOffset = 100;
+                window.scrollTo({
+                    top: offsetTop - navbarOffset,
+                    behavior: "smooth",
+                });
+            }
+        }, 200);
     };
 
     const handleStartLoading = () => {
@@ -34,7 +44,7 @@ export default function Dashboard() {
     };
 
     return (
-        <div className="relative min-h-screen px-4 py-16 bg-gradient-to-br from-blue-50 to-purple-100 dark:from-gray-950 dark:to-gray-900 transition-colors duration-300 overflow-hidden">
+        <div className="pt-8 relative min-h-screen px-4 py-16 bg-gradient-to-br from-blue-50 to-purple-100 dark:from-gray-950 dark:to-gray-900 transition-colors duration-300 overflow-hidden">
             {/* Background glow effects */}
             <div className="absolute top-20 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-purple-400/20 dark:bg-purple-600/20 blur-[140px] rounded-full z-0" />
             <div className="absolute bottom-0 right-10 w-[300px] h-[300px] bg-blue-300/20 dark:bg-blue-600/20 blur-2xl rounded-full z-0" />
@@ -112,7 +122,9 @@ export default function Dashboard() {
                                 className="space-y-6"
                             >
                                 <ReviewResultCard data={reviewResult} />
-                                <PDFExportButton contentRef={resultRef} />
+                                <div className="hide-in-pdf">
+                                    <PDFExportButton contentRef={resultRef} />
+                                </div>
                             </motion.div>
                         )}
                     </AnimatePresence>
