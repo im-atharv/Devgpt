@@ -1,17 +1,16 @@
 // pages/History.jsx
-import React, { useContext } from "react";
+import React, { useContext, useState } from "react";
 import { motion } from "framer-motion";
-
-// Components
 import Loader from "../components/Loader";
 import EmptyState from "../components/EmptyState";
 import SectionTitle from "../components/SectionTitle";
+import ReviewModal from "../components/ReviewModal"; // ✅ import
 
-// Context
 import { HistoryContext } from "../context/HistoryContext";
 
 export default function History() {
     const { history, loading } = useContext(HistoryContext);
+    const [selectedReview, setSelectedReview] = useState(null);
 
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-gray-950 text-gray-900 dark:text-white px-4 py-10">
@@ -27,7 +26,7 @@ export default function History() {
                         {history.map((item, index) => (
                             <motion.div
                                 key={item._id || index}
-                                className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 p-6 rounded-xl shadow"
+                                className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 p-6 rounded-xl shadow relative"
                                 initial={{ opacity: 0, y: 20 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: index * 0.05 }}
@@ -53,14 +52,28 @@ export default function History() {
                                     </span>
                                 </div>
 
-                                <p className="mt-4 text-gray-700 dark:text-gray-300 text-sm whitespace-pre-line">
+                                <p className="mt-4 text-gray-700 dark:text-gray-300 text-sm whitespace-pre-line line-clamp-3">
                                     {item.summary || "No summary provided by AI."}
                                 </p>
+
+                                <button
+                                    onClick={() => setSelectedReview(item)}
+                                    className="mt-4 inline-block text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 transition px-4 py-2 rounded-md"
+                                >
+                                    View Full Review
+                                </button>
                             </motion.div>
                         ))}
                     </div>
                 )}
             </div>
+
+            {/* ✅ Modal when item is selected */}
+            <ReviewModal
+                isOpen={!!selectedReview}
+                onClose={() => setSelectedReview(null)}
+                review={selectedReview}
+            />
         </div>
     );
 }

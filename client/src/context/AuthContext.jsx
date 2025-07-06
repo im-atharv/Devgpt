@@ -5,16 +5,35 @@ import { loginUser, registerUser } from "../services/authService";
 export const AuthContext = createContext();
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(() => {
-    const storedUser = localStorage.getItem("devgpt-user");
-    return storedUser ? JSON.parse(storedUser) : null;
-  });
-
+  const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [isGitHubLogin, setIsGitHubLogin] = useState(
-    localStorage.getItem("isGitHubLogin") === "true"
-  );
+  const [isGitHubLogin, setIsGitHubLogin] = useState(false);
   const isLoggedIn = !!user;
+
+  // Sync from localStorage on mount
+  useEffect(() => {
+    const storedUser = localStorage.getItem("devgpt-user");
+    const githubLogin = localStorage.getItem("isGitHubLogin") === "true";
+
+    if (storedUser) {
+      setUser(JSON.parse(storedUser));
+    }
+    setIsGitHubLogin(githubLogin);
+  }, []);
+
+  // Cross-tab sync (optional but useful)
+  useEffect(() => {
+    const syncAuth = () => {
+      const storedUser = localStorage.getItem("devgpt-user");
+      const githubLogin = localStorage.getItem("isGitHubLogin") === "true";
+
+      setUser(storedUser ? JSON.parse(storedUser) : null);
+      setIsGitHubLogin(githubLogin);
+    };
+
+    window.addEventListener("storage", syncAuth);
+    return () => window.removeEventListener("storage", syncAuth);
+  }, []);
 
   const login = async (formData) => {
     setLoading(true);
@@ -24,6 +43,8 @@ export function AuthProvider({ children }) {
       const token = data.message.token;
 
       setUser(user);
+      setIsGitHubLogin(false);
+
       localStorage.setItem("devgpt-user", JSON.stringify(user));
       localStorage.setItem("devgpt-token", token);
       localStorage.setItem("isGitHubLogin", "false");
@@ -48,6 +69,8 @@ export function AuthProvider({ children }) {
       const token = data.message.token;
 
       setUser(user);
+      setIsGitHubLogin(false);
+
       localStorage.setItem("devgpt-user", JSON.stringify(user));
       localStorage.setItem("devgpt-token", token);
       localStorage.setItem("isGitHubLogin", "false");
@@ -67,6 +90,8 @@ export function AuthProvider({ children }) {
 
   const loginWithGitHub = (token, userFromGitHub) => {
     setUser(userFromGitHub);
+    setIsGitHubLogin(true);
+
     localStorage.setItem("devgpt-user", JSON.stringify(userFromGitHub));
     localStorage.setItem("devgpt-token", token);
     localStorage.setItem("isGitHubLogin", "true");
@@ -74,19 +99,12 @@ export function AuthProvider({ children }) {
 
   const logout = () => {
     setUser(null);
+    setIsGitHubLogin(false);
+
     localStorage.removeItem("devgpt-user");
     localStorage.removeItem("devgpt-token");
     localStorage.removeItem("isGitHubLogin");
   };
-
-  useEffect(() => {
-    const syncAuth = () => {
-      const storedUser = localStorage.getItem("devgpt-user");
-      setUser(storedUser ? JSON.parse(storedUser) : null);
-    };
-    window.addEventListener("storage", syncAuth);
-    return () => window.removeEventListener("storage", syncAuth);
-  }, []);
 
   return (
     <AuthContext.Provider

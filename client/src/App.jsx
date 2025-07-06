@@ -1,7 +1,8 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
-import { ToastContainer } from "react-toastify"; // ✅ Import ToastContainer
-import "react-toastify/dist/ReactToastify.css"; // ✅ Import default styles
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
 import useAuth from "./hooks/useAuth";
 
 // Pages
@@ -14,6 +15,7 @@ import GitHubAuthSuccess from "./pages/GitHubAuthSuccess";
 
 // Components
 import Navbar from "./components/Navbar";
+import RedirectIfAuthenticated from "./components/RedirectIfAuthenticated"; 
 
 function ProtectedRoute({ children }) {
   const { isLoggedIn } = useAuth();
@@ -25,16 +27,30 @@ export default function App() {
     <Router>
       <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
         <Navbar />
-
-        {/* ✅ Toast container goes here (outside <Routes>) */}
         <ToastContainer position="top-center" autoClose={3000} />
 
-        <main className="flex-1 px-4 sm:px-6 lg:px-8 py-6">
+        <main className="flex-1">
           <Routes>
             {/* Public Routes */}
             <Route path="/" element={<LandingPage />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
+
+            <Route
+              path="/login"
+              element={
+                <RedirectIfAuthenticated>
+                  <Login />
+                </RedirectIfAuthenticated>
+              }
+            />
+            <Route
+              path="/register"
+              element={
+                <RedirectIfAuthenticated>
+                  <Register />
+                </RedirectIfAuthenticated>
+              }
+            />
+
             <Route path="/github-success" element={<GitHubAuthSuccess />} />
 
             {/* Protected Routes */}
