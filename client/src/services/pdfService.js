@@ -1,12 +1,14 @@
 import axios from "axios";
 
 export const exportReviewAsPDF = async (htmlContent) => {
+    const token = localStorage.getItem("devgpt-token");
     const response = await axios.post(
         "http://localhost:5000/api/pdf/export", // ✅ Update to your production URL if needed
         { html: htmlContent },
         {
             responseType: "blob",
             headers: {
+                Authorization: `Bearer ${token}`,
                 "Content-Type": "application/json",
             },
         }
