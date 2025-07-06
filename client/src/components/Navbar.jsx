@@ -4,6 +4,7 @@ import { Menu, X, Clock, LogOut, LogIn } from "lucide-react";
 import { motion, AnimatePresence, LayoutGroup } from "framer-motion";
 import useAuth from "../hooks/useAuth";
 import { initiateGitHubLogin } from "../services/authService";
+import { SITE_TITLE, NAV_TAGLINE, getGreeting } from "../constants";
 
 export default function Navbar() {
     const { isLoggedIn, logout, user } = useAuth();
@@ -18,15 +19,7 @@ export default function Navbar() {
     };
 
     useEffect(() => {
-        const hours = new Date().getHours();
-        let greet = "Hello";
-
-        if (hours > 4 && hours < 12) greet = "Good Morning";
-        else if (hours >= 12 && hours < 17) greet = "Good Afternoon";
-        else greet = "Good Evening";
-
-        const name = user?.name?.split(" ")[0] || "there";
-        setGreeting(`${greet}, ${name}`);
+        setGreeting(getGreeting(user));
     }, [user]);
 
     return (
@@ -34,11 +27,8 @@ export default function Navbar() {
             <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
                 {/* Logo and Greeting */}
                 <div className="flex flex-col gap-1 z-10">
-                    <Link
-                        to="/"
-                        className="text-2xl font-bold text-blue-600 dark:text-blue-400"
-                    >
-                        DevGPT
+                    <Link to="/" className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                        {SITE_TITLE}
                     </Link>
                     {isLoggedIn && (
                         <span className="text-xs text-gray-600 dark:text-gray-400 font-medium">
@@ -49,7 +39,7 @@ export default function Navbar() {
 
                 {/* Center Title */}
                 <span className="hidden md:block absolute left-1/2 transform -translate-x-1/2 font-semibold text-base text-gray-700 dark:text-gray-300 tracking-wide">
-                    AI-PR-Reviewer
+                    {NAV_TAGLINE}
                 </span>
 
                 {/* Desktop Buttons */}

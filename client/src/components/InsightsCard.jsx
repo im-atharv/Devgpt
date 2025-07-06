@@ -1,24 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { Lightbulb, Rocket, ShieldCheck } from "lucide-react";
-
-const features = [
-    {
-        icon: <Rocket size={22} className="text-purple-600 dark:text-purple-400" />,
-        title: "Instant PR Feedback",
-        description: "Get automated summaries, suggestions, and risk levels powered by AI — in seconds.",
-    },
-    {
-        icon: <ShieldCheck size={22} className="text-blue-600 dark:text-blue-400" />,
-        title: "Security-First",
-        description: "OAuth login ensures your private repos and data stay secure.",
-    },
-    {
-        icon: <Lightbulb size={22} className="text-yellow-600 dark:text-yellow-400" />,
-        title: "Smart Suggestions",
-        description: "AI points out code smells, design flaws, and gives actionable advice.",
-    },
-];
+import { INSIGHT_FEATURES } from "../constants.js";
 
 export default function InsightsCard() {
     return (
@@ -33,14 +15,14 @@ export default function InsightsCard() {
             </h3>
 
             <ul className="space-y-4">
-                {features.map((item, idx) => (
+                {INSIGHT_FEATURES.map(({ icon: Icon, iconColor, title, description }, idx) => (
                     <li key={idx} className="flex items-start gap-4">
-                        <div className="flex-shrink-0 p-2 rounded-full bg-gray-100 dark:bg-gray-800">
-                            {item.icon}
+                        <div className={`flex-shrink-0 p-2 rounded-full bg-gray-100 dark:bg-gray-800 ${iconColor}`}>
+                            <Icon size={22} />
                         </div>
                         <div>
-                            <h4 className="text-md font-medium text-gray-900 dark:text-white">{item.title}</h4>
-                            <p className="text-sm text-gray-600 dark:text-gray-300">{item.description}</p>
+                            <h4 className="text-md font-medium text-gray-900 dark:text-white">{title}</h4>
+                            <p className="text-sm text-gray-600 dark:text-gray-300">{description}</p>
                         </div>
                     </li>
                 ))}

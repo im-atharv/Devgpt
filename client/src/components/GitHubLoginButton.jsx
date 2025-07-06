@@ -1,7 +1,6 @@
 import React from "react";
 import { FaGithub } from "react-icons/fa";
-
-const GITHUB_AUTH_URL = "http://localhost:5000/api/auth/github"; // Replace in prod
+import { GITHUB_AUTH_URL } from "../constants.js"; 
 
 export default function GitHubLoginButton({ label = "Continue with GitHub" }) {
     return (

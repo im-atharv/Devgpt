@@ -7,17 +7,10 @@ import { saveReview } from "../services/historyService";
 import { motion } from "framer-motion";
 import useAuth from "../hooks/useAuth";
 import { toast } from "react-toastify";
-
-const rotatingQuotes = [
-    "“Good code is its own best documentation.” — Steve McConnell",
-    "“First, solve the problem. Then, write the code.” — John Johnson",
-    "“Code is like humor. When you have to explain it, it’s bad.” — Cory House",
-];
+import { ROTATING_QUOTES, VALID_RISK_LEVELS } from "../constants.js";
 
 export default function PRInputForm({ onReviewSuccess }) {
     const { isGitHubLogin } = useAuth();
-
-    // 🔧 Fix OAuth toggle visibility
     const [useGitHubToken, setUseGitHubToken] = useState(() => isGitHubLogin);
     const [quoteIndex, setQuoteIndex] = useState(0);
 
@@ -29,7 +22,7 @@ export default function PRInputForm({ onReviewSuccess }) {
 
     useEffect(() => {
         const interval = setInterval(() => {
-            setQuoteIndex((prev) => (prev + 1) % rotatingQuotes.length);
+            setQuoteIndex((prev) => (prev + 1) % ROTATING_QUOTES.length);
         }, 5000);
         return () => clearInterval(interval);
     }, []);
@@ -49,13 +42,14 @@ export default function PRInputForm({ onReviewSuccess }) {
                 throw new Error("AI review did not return valid content");
             }
 
-            const riskLevels = ["low", "medium", "high"];
-            const isValidRisk = riskLevels.includes(review.riskLevel);
+            const riskLevel = VALID_RISK_LEVELS.includes(review.riskLevel)
+                ? review.riskLevel
+                : "low";
 
             await saveReview({
                 prUrl: values.prUrl,
                 summary: review.summary,
-                riskLevel: isValidRisk ? review.riskLevel : "low",
+                riskLevel,
                 suggestions: review.suggestions,
                 affectedFiles: review.affectedFiles,
                 fileComments: review.fileComments,
@@ -145,7 +139,7 @@ export default function PRInputForm({ onReviewSuccess }) {
 
                             {/* Quote */}
                             <div className="pt-0 mb-0 text-sm text-gray-600 dark:text-gray-300 text-center italic leading-snug min-h-[48px] transition-opacity duration-300">
-                                {rotatingQuotes[quoteIndex]}
+                                {ROTATING_QUOTES[quoteIndex]}
                             </div>
 
                             {/* Trust Indicator */}
