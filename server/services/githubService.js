@@ -2,13 +2,11 @@
 import axios from "axios";
 import { User } from "../models/User.js";
 
-export const fetchPullRequestDiff = async (prUrl, userId, useGitHubToken = false) => {
+export const fetchPRContext = async (prUrl, userId, useGitHubToken = false) => {
     const match = prUrl.match(
         /^https:\/\/github\.com\/([^/]+)\/([^/]+)\/pull\/(\d+)/
     );
-    if (!match) {
-        throw new Error("Invalid PR URL");
-    }
+    if (!match) throw new Error("Invalid PR URL");
 
     const [_, owner, repo, pullNumber] = match;
 
@@ -26,27 +24,37 @@ export const fetchPullRequestDiff = async (prUrl, userId, useGitHubToken = false
         headers.Authorization = `Bearer ${user.githubToken}`;
     }
 
-
     try {
-        const filesResponse = await axios.get(
+        // PR metadata
+        const prRes = await axios.get(
+            `https://api.github.com/repos/${owner}/${repo}/pulls/${pullNumber}`,
+            { headers }
+        );
+        const { title, body, base, head } = prRes.data;
+
+        // Changed files
+        const filesRes = await axios.get(
             `https://api.github.com/repos/${owner}/${repo}/pulls/${pullNumber}/files`,
             { headers }
         );
 
-        const files = filesResponse.data;
+        const files = filesRes.data.map(file => ({
+            filename: file.filename,
+            status: file.status,
+            patch: file.patch || "",
+        }));
 
-        if (!files.length) throw new Error("PR has no changed files");
-
-        const diff = files
-            .map((file) => `### File: ${file.filename}\n\`\`\`diff\n${file.patch || ""}\n\`\`\``)
-            .join("\n\n");
-
-        return diff;
+        return {
+            repo: `${owner}/${repo}`,
+            prNumber: pullNumber,
+            title,
+            body,
+            baseBranch: base.ref,
+            headBranch: head.ref,
+            files,
+        };
     } catch (err) {
         console.error("❌ GitHub API error:", err.response?.data || err.message);
-        if (err.code === "GITHUB_AUTH_REQUIRED") {
-            throw err;
-        }
-        throw new Error("Failed to fetch PR diff from GitHub.");
+        throw err.code === "GITHUB_AUTH_REQUIRED" ? err : new Error("Failed to fetch PR context from GitHub.");
     }
 };

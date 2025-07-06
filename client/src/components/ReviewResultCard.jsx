@@ -1,6 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { AlertCircle, Lightbulb, FolderGit2 } from "lucide-react";
+import { AlertCircle, Lightbulb, FolderGit2, FileWarning } from "lucide-react";
 
 export default function ReviewResultCard({ data }) {
     const {
@@ -8,6 +8,7 @@ export default function ReviewResultCard({ data }) {
         riskLevel,
         suggestions,
         affectedFiles,
+        fileComments,
     } = data?.message || data || {};
 
     const riskStyles = {
@@ -75,6 +76,35 @@ export default function ReviewResultCard({ data }) {
                             <li key={idx}>📁 {file}</li>
                         ))}
                     </ul>
+                </div>
+            )}
+
+            {/* File Comments */}
+            {fileComments?.length > 0 && (
+                <div>
+                    <div className="flex items-center gap-2 mb-2 mt-4">
+                        <FileWarning className="w-5 h-5 text-red-500 dark:text-red-400" />
+                        <h3 className="text-lg font-semibold text-gray-800 dark:text-white">
+                            File Comments
+                        </h3>
+                    </div>
+                    <div className="space-y-4">
+                        {fileComments.map((file, idx) => (
+                            <div
+                                key={idx}
+                                className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-gray-50 dark:bg-gray-800"
+                            >
+                                <p className="text-sm font-semibold text-blue-700 dark:text-blue-300 mb-2 font-mono">
+                                    📄 {file.filename}
+                                </p>
+                                <ul className="list-disc pl-5 text-sm text-gray-700 dark:text-gray-300 space-y-1">
+                                    {file.issues.map((issue, i) => (
+                                        <li key={i}>{issue}</li>
+                                    ))}
+                                </ul>
+                            </div>
+                        ))}
+                    </div>
                 </div>
             )}
         </motion.div>

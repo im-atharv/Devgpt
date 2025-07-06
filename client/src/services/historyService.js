@@ -1,16 +1,24 @@
+// services/historyService.js
 import axios from "axios";
 
 const API = axios.create({
-    baseURL: "http://localhost:5000", // Adjust if using env vars
+    baseURL: "http://localhost:5000", // Update with env in production
 });
 
-// Save review
-export const saveReview = async ({ prUrl, summary, riskLevel }) => {
+// Save full review
+export const saveReview = async ({
+    prUrl,
+    summary,
+    riskLevel,
+    suggestions = [],
+    affectedFiles = [],
+    fileComments = [],
+}) => {
     const token = localStorage.getItem("devgpt-token");
 
     const response = await API.post(
         "/api/history",
-        { prUrl, summary, riskLevel },
+        { prUrl, summary, riskLevel, suggestions, affectedFiles, fileComments },
         {
             headers: {
                 Authorization: `Bearer ${token}`,
@@ -21,7 +29,7 @@ export const saveReview = async ({ prUrl, summary, riskLevel }) => {
     return response.data.message;
 };
 
-// Fetch review history
+// Get review history
 export const getReviewHistory = async () => {
     const token = localStorage.getItem("devgpt-token");
 

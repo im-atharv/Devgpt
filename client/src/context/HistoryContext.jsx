@@ -14,7 +14,7 @@ export function HistoryProvider({ children }) {
             if (!isLoggedIn) return;
             setLoading(true);
             try {
-                const data = await getReviewHistory(); // ✅ now fetches real DB data
+                const data = await getReviewHistory();
                 setHistory(data || []);
             } catch (err) {
                 console.error("❌ Error fetching review history:", err.message || err);
@@ -25,7 +25,6 @@ export function HistoryProvider({ children }) {
 
         fetchHistory();
     }, [isLoggedIn]);
-
 
     const addReviewToHistory = (review) => {
         setHistory((prev) => [review, ...prev]);

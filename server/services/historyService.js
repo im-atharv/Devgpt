@@ -1,16 +1,18 @@
+// services/historyService.js
 import { Review } from "../models/Review.js";
 
-// Save a review
-export async function saveReview({ userId, prUrl, summary, riskLevel }) {
+export async function saveReview({ userId, prUrl, summary, riskLevel, suggestions, affectedFiles, fileComments }) {
     return await Review.create({
         userId,
         prUrl,
         summary,
         riskLevel,
+        suggestions,
+        affectedFiles,
+        fileComments,
     });
 }
 
-// Get all reviews by user
 export async function getReviewsByUser(userId) {
     return await Review.find({ userId }).sort({ createdAt: -1 });
 }

@@ -56,6 +56,9 @@ export default function PRInputForm({ onReviewSuccess }) {
                 prUrl: values.prUrl,
                 summary: review.summary,
                 riskLevel: isValidRisk ? review.riskLevel : "low",
+                suggestions: review.suggestions,
+                affectedFiles: review.affectedFiles,
+                fileComments: review.fileComments,
             });
 
             onReviewSuccess({ prUrl: values.prUrl, ...review });

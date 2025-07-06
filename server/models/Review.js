@@ -1,3 +1,4 @@
+// models/Review.js
 import mongoose from "mongoose";
 
 const reviewSchema = new mongoose.Schema(
@@ -20,6 +21,20 @@ const reviewSchema = new mongoose.Schema(
             enum: ["low", "medium", "high"],
             required: true,
         },
+        suggestions: {
+            type: [String],
+            default: [],
+        },
+        affectedFiles: {
+            type: [String],
+            default: [],
+        },
+        fileComments: [
+            {
+                filename: String,
+                issues: [String],
+            },
+        ],
     },
     { timestamps: true }
 );
