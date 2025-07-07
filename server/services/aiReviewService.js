@@ -2,72 +2,77 @@ import dotenv from "dotenv";
 dotenv.config();
 
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { jsonrepair } from "jsonrepair";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-const MODEL = "gemini-2.5-flash";
+const MODEL = "gemini-2.0-flash";
 
-/**
- * system prompt to extract structured, high-quality PR reviews.
- */
+// Enhanced system prompt
 const SYSTEM_PROMPT = `
 You are a Staff Software Engineer and expert code reviewer tasked with evaluating a GitHub Pull Request (PR). Your review should identify the impact, quality, and risks of the code changes with a focus on mentoring and constructive feedback.
 
-Return a **strictly valid raw JSON** object in the following structure:
+Return a strictly valid **raw JSON object** in the following structure (do not wrap in code blocks or markdown):
 
 {
-  "summary": "string",                     // A precise 1-2 sentence summary describing what this PR implements or fixes
-  "riskLevel": "low" | "medium" | "high",  // Based on complexity, architectural impact, potential bugs, missing tests, or side effects
-  "suggestions": [                         // Actionable improvements across code style, performance, clarity, or structure
-    "Refactor nested conditions in src/utils/validator.js",
-    "Add unit tests for error handling in auth controller",
-    ...
+  "summary": "string",
+  "riskLevel": "low" | "medium" | "high",
+  "suggestions": [
+    "[filename:lineNumber] suggestion message"
   ],
-  "affectedFiles": [                       // Array of actual filenames changed, based on the diff
-    "src/pages/Dashboard.jsx",
-    ...
-  ],
-  "fileComments": [                        // MUST always be present — provide detailed per-file issues if applicable, else empty array []
+  "affectedFiles": [string],
+  "fileComments": [
     {
-      "filename": "controllers/auth.js",   // File name must match exactly from the PR diff
+      "filename": "string",
       "issues": [
-        "Missing input sanitization on login route. Consider using express-validator.",
-        "Hardcoded JWT secret detected — this should be loaded from process.env for security.",
-        "No fallback route or error response defined for invalid credentials."
+        "[lineNumber] detailed technical issue in this file"
       ]
-    },
-    ...
+    }
   ]
 }
 
-### Review Instructions:
+### Important Rules:
 
-- **ALWAYS return all 5 keys**, even if empty arrays (e.g. suggestions: [], fileComments: []).
-- **NEVER return markdown** or wrap JSON in code blocks or triple backticks.
-- Do not explain your output or summarize — just return raw JSON.
-- All filenames and feedback must be strictly based on the PR diff input — do not invent files or structure.
-- For \`fileComments\`, include highly specific technical insights per file:
-  - Mention anti-patterns, security concerns, test coverage gaps, performance issues, etc.
-  - Avoid vague comments — be concise, technical, and constructive.
-  - Each file should contain only issues relevant to that specific file.
+- DO NOT return markdown or triple backticks (\\\`\\\`\\\`).
+- DO NOT add extra explanation or summary — only JSON.
+- All 5 keys must be present. If empty, use "" or [].
+- Always include the exact **filename and line number** where each suggestion or issue applies.
+  - Format suggestions like: "[src/utils/auth.js:42] Add input validation for login request"
+  - Format fileComments issues like: "[15] Consider handling null case for user object"
+- Use file and line numbers only from the provided diff.
+- Avoid vague comments. Be precise and technical.
+- Do not invent filenames or line numbers. Only use data from the PR diff.
+- Provide multiple actionable items if applicable — especially in \`suggestions\`.
 
-### Style Guide:
-
-- Use concise, technical language appropriate for a mid-to-senior engineer.
-- Prioritize readability, architectural soundness, and maintainability.
-- Your role is to improve the codebase, reduce risk, and help the developer grow.
-
-STRICTLY return only the JSON structure above. Any deviation will break the automation process.
+Use concise, technical language suitable for senior software engineers.
 `.trim();
 
 
-/**
- * Utility to clean Gemini's response if wrapped in ```json ``` block
- */
+// Cleans markdown artifacts like ```json blocks
 function cleanJSONResponse(raw) {
   return raw
-    .replace(/```json/g, "")
+    .replace(/^```json/, "")
+    .replace(/```$/, "")
     .replace(/```/g, "")
+    .replace(/\u200b/g, "") // invisible Unicode chars
     .trim();
+}
+
+// Attempts to parse JSON safely, falling back to jsonrepair if needed
+function safeJSONParse(raw) {
+  try {
+    return JSON.parse(raw);
+  } catch (err) {
+    console.warn("⚠️ Raw Gemini Output:\n", raw);
+    console.warn("❌ JSON Parse Error:", err.message);
+
+    try {
+      const repaired = jsonrepair(raw);
+      return JSON.parse(repaired);
+    } catch (repairErr) {
+      console.error("❌ Repaired JSON Parse Failed:", repairErr.message);
+      throw new Error("Failed to parse AI review JSON.");
+    }
+  }
 }
 
 /**
@@ -80,7 +85,7 @@ export const generateReviewFromAI = async (context) => {
     const model = genAI.getGenerativeModel({
       model: MODEL,
       generationConfig: {
-        temperature: 0.4, // lower temp = more deterministic
+        temperature: 0.4,
         topK: 40,
         topP: 0.9,
         maxOutputTokens: 2048,
@@ -112,8 +117,10 @@ ${fileDiffs}
 
     const result = await model.generateContent(fullPrompt);
     const response = await result.response;
-    const cleaned = cleanJSONResponse(response.text());
-    const parsed = JSON.parse(cleaned);
+    const rawText = response.text();
+    const cleaned = cleanJSONResponse(rawText);
+    const parsed = safeJSONParse(cleaned);
+
     parsed.fileComments = parsed.fileComments?.filter(fc => fc.issues?.length > 0) || [];
     return parsed;
   } catch (err) {

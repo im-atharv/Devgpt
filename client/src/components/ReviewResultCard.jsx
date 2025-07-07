@@ -1,7 +1,24 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { AlertCircle, Lightbulb, FolderGit2, FileWarning } from "lucide-react";
-import { RISK_STYLES } from "../constants"; // ✅ Imported styles
+import { RISK_STYLES } from "../constants";
+
+function highlightFileReference(text) {
+    const fileRefRegex = /\[([^\]:]+:\d+)\]/g;
+    return text.split(fileRefRegex).map((part, i) => {
+        if (i % 2 === 1) {
+            return (
+                <span
+                    key={i}
+                    className="text-yellow-600 dark:text-yellow-300 font-mono font-semibold"
+                >
+                    [{part}]
+                </span>
+            );
+        }
+        return part;
+    });
+}
 
 export default function ReviewResultCard({ data }) {
     const {
@@ -42,7 +59,9 @@ export default function ReviewResultCard({ data }) {
                         <h3 className="text-lg font-semibold text-gray-800 dark:text-white">Suggestions</h3>
                     </div>
                     <ul className="list-disc pl-6 space-y-2 text-gray-700 dark:text-gray-300">
-                        {suggestions.map((item, idx) => <li key={idx}>{item}</li>)}
+                        {suggestions.map((item, idx) => (
+                            <li key={idx}>{highlightFileReference(item)}</li>
+                        ))}
                     </ul>
                 </div>
             )}
@@ -76,7 +95,7 @@ export default function ReviewResultCard({ data }) {
                                 </p>
                                 <ul className="list-disc pl-5 text-sm text-gray-700 dark:text-gray-300 space-y-1">
                                     {file.issues.map((issue, i) => (
-                                        <li key={i}>{issue}</li>
+                                        <li key={i}>{highlightFileReference(issue)}</li>
                                     ))}
                                 </ul>
                             </div>
