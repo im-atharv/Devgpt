@@ -2,11 +2,10 @@
 import passport from "passport";
 import GitHubStrategy from "passport-github2";
 import User from "../models/User.js";
-import { createJWT } from "../utils/tokenUtils.js";
 
 const GITHUB_CLIENT_ID = process.env.GITHUB_CLIENT_ID;
 const GITHUB_CLIENT_SECRET = process.env.GITHUB_CLIENT_SECRET;
-const CALLBACK_URL = process.env.GITHUB_CALLBACK_URL || "http://localhost:5000/api/auth/github/callback";
+const CALLBACK_URL ="http://localhost:5000/api/auth/github/callback";
 
 passport.use(
     new GitHubStrategy(
@@ -15,7 +14,7 @@ passport.use(
             clientSecret: GITHUB_CLIENT_SECRET,
             callbackURL: CALLBACK_URL,
         },
-        async (accessToken, refreshToken, profile, done) => {
+        async (profile, done) => {
             try {
                 const existingUser = await User.findOne({ githubId: profile.id });
 

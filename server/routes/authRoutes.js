@@ -1,10 +1,6 @@
 // routes/authRoutes.js
 import express from "express";
-import {
-    handleRegister,
-    handleLogin,
-    githubCallbackController,
-} from "../controllers/authController.js";
+import { handleRegister, handleLogin, githubCallbackController, } from "../controllers/authController.js";
 import { validateRequest } from "../middlewares/validateRequest.js";
 import { registerSchema, loginSchema } from "../validation/authSchema.js";
 import passport from "../middlewares/passport.js";

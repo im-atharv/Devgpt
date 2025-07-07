@@ -1,5 +1,5 @@
 export const validateRequest = (schema) => (req, res, next) => {
-  const result = schema.safeParse(req.body); // ✅ FIXED
+  const result = schema.safeParse(req.body);
   if (!result.success) {
     const error = result.error.flatten();
     return res.status(400).json({

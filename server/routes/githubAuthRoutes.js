@@ -15,7 +15,7 @@ router.get(
     }),
     (req, res) => {
         // 🔐 Your logic to store GitHub access token, or send it via JWT
-        res.redirect("http://localhost:3000/github-auth-success"); // or pass token as query param
+        res.redirect("http://localhost:5173/github-auth-success"); // or pass token as query param
     }
 );
 

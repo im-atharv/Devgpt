@@ -1,14 +1,13 @@
-// services/aiReviewService.js
 import dotenv from "dotenv";
 dotenv.config();
 
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-const MODEL = "gemini-1.5-flash-latest";
+const MODEL = "gemini-2.5-flash";
 
 /**
- * Production-grade system prompt to extract structured, high-quality PR reviews.
+ * system prompt to extract structured, high-quality PR reviews.
  */
 const SYSTEM_PROMPT = `
 You are a Staff Software Engineer and expert code reviewer tasked with evaluating a GitHub Pull Request (PR). Your review should identify the impact, quality, and risks of the code changes with a focus on mentoring and constructive feedback.

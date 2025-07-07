@@ -65,7 +65,7 @@ export default function PRInputForm({ onReviewSuccess }) {
                 (response?.status === 401 || response?.status === 403) &&
                 backendMsg.toLowerCase().includes("github")
             ) {
-                actions.setFieldError("prUrl", "🔒 You must log in with GitHub to review private PRs.");
+                actions.setFieldError("prUrl", "🔒 You must log in with Your GitHub to review private PRs Of Your Private PR.");
             } else {
                 actions.setFieldError("prUrl", backendMsg || "Review failed.");
             }

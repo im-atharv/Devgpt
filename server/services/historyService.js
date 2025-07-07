@@ -1,4 +1,3 @@
-// services/historyService.js
 import { Review } from "../models/Review.js";
 
 export async function saveReview({ userId, prUrl, summary, riskLevel, suggestions, affectedFiles, fileComments }) {

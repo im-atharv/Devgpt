@@ -27,7 +27,7 @@ export const requireAuth = async (req, res, next) => {
             id: user._id,
             email: user.email,
             githubToken: user.githubToken || null,
-            isGitHubLogin: !!user.githubToken, // ✅ <--- this line
+            isGitHubLogin: !!user.githubToken, 
         };
 
 
