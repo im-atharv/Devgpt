@@ -14,7 +14,7 @@ passport.use(
             clientSecret: process.env.GITHUB_CLIENT_SECRET,
             callbackURL: "http://localhost:5000/api/auth/github/callback",
         },
-        async (accessToken, profile, done) => {
+        async (accessToken, refreshToken, profile, done) => {
             try {
                 const githubId = profile.id;
                 const email = profile.emails?.[0]?.value || `${githubId}@github.com`; // fallback if email is not public
